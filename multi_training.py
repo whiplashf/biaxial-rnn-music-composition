@@ -1,12 +1,13 @@
 import os, random
 from midi_to_statematrix import *
 from data import *
-import cPickle as pickle
+import pickle
 
 import signal
 
 batch_width = 10 # number of sequences in a batch
-batch_len = 16*8 # length of each sequence
+# batch_len = 16*8 # length of each sequence
+batch_len = 16 # length of each sequence
 division_len = 16 # interval between possible start locations
 
 def loadPieces(dirpath):
@@ -24,12 +25,14 @@ def loadPieces(dirpath):
             continue
 
         pieces[name] = outMatrix
-        print "Loaded {}".format(name)
+        print("Loaded {}".format(name))
 
     return pieces
 
 def getPieceSegment(pieces):
-    piece_output = random.choice(pieces.values())
+    # piece_output = random.choice(pieces.values())
+    piece_output = random.choice(list(pieces.values()))
+
     start = random.randrange(0,len(piece_output)-batch_len,division_len)
     # print "Range is {} {} {} -> {}".format(0,len(piece_output)-batch_len,division_len, start)
 
@@ -52,7 +55,7 @@ def trainPiece(model,pieces,epochs,start=0):
             break
         error = model.update_fun(*getPieceBatch(pieces))
         if i % 100 == 0:
-            print "epoch {}, error={}".format(i,error)
+            print("epoch {}, error={}".format(i,error))
         if i % 500 == 0 or (i % 100 == 0 and i < 1000):
             xIpt, xOpt = map(numpy.array, getPieceSegment(pieces))
             noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), model.predict_fun(batch_len, 1, xIpt[0])), axis=0),'output/sample{}'.format(i))
